@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Photo Enhancer - Jadi HD</title>
+    <!-- Kita pakai Tailwind CSS online biar langsung bagus tanpa instalasi -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl text-center">
+        <!-- Judul -->
+        <h1 class="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            AI Photo Enhancer ✨
+        </h1>
+        <p class="text-slate-400 text-sm mb-6">Ubah foto blur/burik jadi HD secara otomatis</p>
+
+        <!-- Kotak Upload -->
+        <div class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-4 transition cursor-pointer bg-slate-950/50 mb-4">
+            <input type="file" id="FotoInput" accept="image/*" class="hidden" onchange="previewFoto(event)">
+            <label for="FotoInput" class="cursor-pointer block py-4">
+                <span class="text-sm text-slate-400 block mb-2">Klik untuk upload foto burikmu</span>
+                <span class="bg-cyan-600 hover:bg-cyan-700 text-xs font-semibold px-4 py-2 rounded-lg text-white inline-block">Pilih File</span>
+            </label>
+        </div>
+
+        <!-- Preview Foto Sebelum & Sesudah -->
+        <div id="AreaPreview" class="hidden space-y-4">
+            <div>
+                <p class="text-xs text-slate-400 mb-1">Preview Foto Asli:</p>
+                <img id="FotoAsli" src="" class="max-h-48 mx-auto rounded-lg border border-slate-700">
+            </div>
+            
+            <button onclick="prosesKeHD()" id="TombolProses" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 font-medium py-2.5 rounded-xl text-sm shadow-lg shadow-cyan-500/20 hover:opacity-90 active:scale-98 transition">
+                ⚡ Jadikan HD Sekarang
+            </button>
+        </div>
+
+        <!-- Hasil HD -->
+        <div id="AreaHasil" class="hidden mt-6 pt-6 border-t border-slate-800">
+            <p class="text-sm text-green-400 font-semibold mb-2">✨ Hasil Foto HD Anda:</p>
+            <img id="FotoHD" src="" class="max-h-52 mx-auto rounded-lg border border-green-500/30 mb-4">
+            <a id="TombolDownload" href="#" download="foto-hd.jpg" class="text-xs bg-slate-800 text-cyan-400 border border-slate-700 px-4 py-2 rounded-lg hover:bg-slate-700 inline-block">
+                ⬇️ Download Hasil
+            </a>
+        </div>
+    </div>
+
+    <!-- LOGIKA JAVASCRIPT NYA -->
+    <script>
+        function previewFoto(event) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('FotoAsli').src = e.target.result;
+                    document.getElementById('AreaPreview').classList.remove('hidden');
+                    // Sembunyikan hasil lama kalau ada upload baru
+                    document.getElementById('AreaHasil').classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function prosesKeHD() {
+            const tombol = document.getElementById('TombolProses');
+            tombol.innerText = "⏳ Sedang Menjernihkan...";
+            tombol.disabled = true;
+
+            // Efek simulasi loading 3 detik (Biar kelihatan prosesnya dulu)
+            setTimeout(() => {
+                // SEMENTARA: Kita set hasilnya sama dengan foto asli dulu 
+                // Nanti di langkah berikutnya kita hubungkan ke AI aslinya
+                const fotoAsliSrc = document.getElementById('FotoAsli').src;
+                
+                document.getElementById('FotoHD').src = fotoAsliSrc;
+                document.getElementById('TombolDownload').href = fotoAsliSrc;
+                
+                // Munculkan area hasil
+                document.getElementById('AreaHasil').classList.remove('hidden');
+                
+                tombol.innerText = "⚡ Jadikan HD Sekarang";
+                tombol.disabled = false;
+                alert("Simulasi Berhasil! Tampilan websitemu sudah siap.");
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
