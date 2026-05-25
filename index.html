@@ -3,87 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Photo Enhancer - Jadi HD</title>
+    <title>AI Photo Enhancer - Fitur Before/After</title>
     <!-- Kita pakai Tailwind CSS online biar langsung bagus tanpa instalasi -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* Style tambahan untuk Slider Before/After */
+        .comparison-slider {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 1px solid #334155; /* border-slate-700 */
+        }
+        .comparison-slider img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .comparison-slider .before-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+        .comparison-slider .after-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 2;
+            /* Inisialisasi: Tampilkan 50% */
+            clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+        }
+        .comparison-slider .slider-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            background: white;
+            z-index: 3;
+            cursor: ew-resize;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .comparison-slider .slider-handle:after {
+            content: '↔';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: white;
+            color: #0f172a; /* slate-900 */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .label {
+            position: absolute;
+            bottom: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 4;
+            pointer-events: none;
+        }
+        .label-before { left: 10px; background: rgba(15, 23, 42, 0.7); }
+        .label-after { right: 10px; background: rgba(34, 211, 238, 0.7); }
+    </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="max-w-md w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl text-center">
+    <div class="max-w-xl w-full bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl text-center">
         <!-- Judul -->
-        <h1 class="text-2xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+        <h1 class="text-3xl font-bold mb-1 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
             AI Photo Enhancer ✨
         </h1>
-        <p class="text-slate-400 text-sm mb-6">Ubah foto blur/burik jadi HD secara otomatis</p>
+        <p class="text-slate-400 text-sm mb-6">Ubah foto blur/burik jadi HD & Bandingkan Hasilnya</p>
 
         <!-- Kotak Upload -->
-        <div class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-4 transition cursor-pointer bg-slate-950/50 mb-4">
-            <input type="file" id="FotoInput" accept="image/*" class="hidden" onchange="previewFoto(event)">
-            <label for="FotoInput" class="cursor-pointer block py-4">
-                <span class="text-sm text-slate-400 block mb-2">Klik untuk upload foto burikmu</span>
-                <span class="bg-cyan-600 hover:bg-cyan-700 text-xs font-semibold px-4 py-2 rounded-lg text-white inline-block">Pilih File</span>
+        <div id="DropZone" class="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-4 transition cursor-pointer bg-slate-950/50 mb-4">
+            <input type="file" id="FotoInput" accept="image/*" class="hidden" onchange="loadFoto(event)">
+            <label for="FotoInput" class="cursor-pointer block py-6">
+                <span class="text-3xl block mb-2">📸</span>
+                <span class="text-sm text-slate-400 block mb-3">Klik atau seret foto burikmu ke sini</span>
+                <span class="bg-cyan-600 hover:bg-cyan-700 text-xs font-semibold px-5 py-2.5 rounded-lg text-white inline-block transition">Pilih File</span>
             </label>
         </div>
 
-        <!-- Preview Foto Sebelum & Sesudah -->
-        <div id="AreaPreview" class="hidden space-y-4">
-            <div>
-                <p class="text-xs text-slate-400 mb-1">Preview Foto Asli:</p>
-                <img id="FotoAsli" src="" class="max-h-48 mx-auto rounded-lg border border-slate-700">
-            </div>
-            
-            <button onclick="prosesKeHD()" id="TombolProses" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 font-medium py-2.5 rounded-xl text-sm shadow-lg shadow-cyan-500/20 hover:opacity-90 active:scale-98 transition">
-                ⚡ Jadikan HD Sekarang
-            </button>
-        </div>
+        <!-- Tombol Proses -->
+        <button onclick="prosesKeHD()" id="TombolProses" class="hidden w-full mb-6 bg-gradient-to-r from-cyan-500 to-blue-600 font-medium py-3 rounded-xl text-sm shadow-lg shadow-cyan-500/20 hover:opacity-90 active:scale-98 transition disabled:opacity-60 disabled:cursor-not-allowed">
+            ⚡ Jadikan HD Sekarang
+        </button>
 
-        <!-- Hasil HD -->
+        <!-- AREA HASIL: Slider Before/After -->
         <div id="AreaHasil" class="hidden mt-6 pt-6 border-t border-slate-800">
-            <p class="text-sm text-green-400 font-semibold mb-2">✨ Hasil Foto HD Anda:</p>
-            <img id="FotoHD" src="" class="max-h-52 mx-auto rounded-lg border border-green-500/30 mb-4">
-            <a id="TombolDownload" href="#" download="foto-hd.jpg" class="text-xs bg-slate-800 text-cyan-400 border border-slate-700 px-4 py-2 rounded-lg hover:bg-slate-700 inline-block">
-                ⬇️ Download Hasil
-            </a>
+            <p class="text-sm text-slate-400 font-medium mb-4">✨ Seret garis tengah untuk membandingkan:</p>
+            
+            <div id="SliderContainer" class="comparison-slider aspect-[4/3] max-h-[70vh]">
+                <!-- Foto Asli (Before) -->
+                <img id="FotoBefore" src="" class="before-img" alt="Before">
+                <span class="label label-before">Before</span>
+                
+                <!-- Foto HD (After) -->
+                <img id="FotoAfter" src="" class="after-img" alt="After">
+                <span class="label label-after">After (HD)</span>
+                
+                <!-- Gagang Slider -->
+                <div id="SliderHandle" class="slider-handle"></div>
+            </div>
+
+            <div class="mt-6 flex gap-3 justify-center">
+                <a id="TombolDownload" href="#" download="foto-hd.jpg" class="text-xs bg-slate-800 text-cyan-400 border border-slate-700 px-5 py-3 rounded-xl hover:bg-slate-700 inline-block transition">
+                    ⬇️ Download Hasil HD
+                </a>
+                <button onclick="resetApp()" class="text-xs bg-slate-800 text-slate-400 border border-slate-700 px-5 py-3 rounded-xl hover:bg-slate-700 inline-block transition">
+                    🔄 Coba Foto Lain
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- LOGIKA JAVASCRIPT NYA -->
     <script>
-        function previewFoto(event) {
+        let isResizing = false;
+
+        // 1. Memuat Foto & Menampilkan Tombol Proses
+        function loadFoto(event) {
             const input = event.target;
+            const dropZone = document.getElementById('DropZone');
+            const tombolProses = document.getElementById('TombolProses');
+
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('FotoAsli').src = e.target.result;
-                    document.getElementById('AreaPreview').classList.remove('hidden');
-                    // Sembunyikan hasil lama kalau ada upload baru
-                    document.getElementById('AreaHasil').classList.add('hidden');
+                    // Set kedua image (Before & After) dengan foto yang sama untuk inisialisasi
+                    document.getElementById('FotoBefore').src = e.target.result;
+                    document.getElementById('FotoAfter').src = e.target.result; // Sementara sama
+                    
+                    dropZone.classList.add('hidden'); // Sembunyikan area upload
+                    tombolProses.classList.remove('hidden'); // Munculkan tombol proses
+                    document.getElementById('AreaHasil').classList.add('hidden'); // Sembunyikan hasil lama
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
+        // 2. Simulasi Proses Ke HD & Memunculkan Slider
         function prosesKeHD() {
             const tombol = document.getElementById('TombolProses');
-            tombol.innerText = "⏳ Sedang Menjernihkan...";
+            const areaHasil = document.getElementById('AreaHasil');
+            const fotoAfter = document.getElementById('FotoAfter');
+
+            tombol.innerText = "⏳ Sedang Menjernihkan (Simulasi)...";
             tombol.disabled = true;
 
-            // Efek simulasi loading 3 detik (Biar kelihatan prosesnya dulu)
+            // Efek simulasi loading 2.5 detik
             setTimeout(() => {
-                // SEMENTARA: Kita set hasilnya sama dengan foto asli dulu 
-                // Nanti di langkah berikutnya kita hubungkan ke AI aslinya
-                const fotoAsliSrc = document.getElementById('FotoAsli').src;
+                // Dalam implementasi nyata, ini adalah URL dari AI API
+                // Di sini, kita akan gunakan filter CSS untuk mensimulasikan "HD"
+                // Kita tambahkan sedikit kontras dan ketajaman
+                fotoAfter.style.filter = "contrast(1.1) saturate(1.1) brightness(1.05) sharpness(1)"; // CSS tidak punya 'sharpness' asli, ini hanya simulasi
+                fotoAfter.style.transform = "scale(1.01)"; // Sedikit zoom biar kelihatan beda
+
+                // Set tombol download
+                document.getElementById('TombolDownload').href = fotoAfter.src;
                 
-                document.getElementById('FotoHD').src = fotoAsliSrc;
-                document.getElementById('TombolDownload').href = fotoAsliSrc;
-                
-                // Munculkan area hasil
-                document.getElementById('AreaHasil').classList.remove('hidden');
+                tombol.classList.add('hidden'); // Sembunyikan tombol proses
+                areaHasil.classList.remove('hidden'); // Munculkan area hasil/slider
                 
                 tombol.innerText = "⚡ Jadikan HD Sekarang";
                 tombol.disabled = false;
-                alert("Simulasi Berhasil! Tampilan websitemu sudah siap.");
-            }, 3000);
+                
+                // Inisialisasi slider
+                initSlider();
+            }, 2500);
+        }
+
+        // 3. Logika Reset untuk Coba Foto Lain
+        function resetApp() {
+            document.getElementById('FotoInput').value = ''; // Reset input file
+            document.getElementById('DropZone').classList.remove('hidden');
+            document.getElementById('TombolProses').classList.add('hidden');
+            document.getElementById('AreaHasil').classList.add('hidden');
+            // Reset filter simulasi HD
+            document.getElementById('FotoAfter').style.filter = "none";
+            document.getElementById('FotoAfter').style.transform = "none";
+        }
+
+        // 4. Logika Interaksi Slider
+        function initSlider() {
+            const container = document.getElementById('SliderContainer');
+            const handle = document.getElementById('SliderHandle');
+            const afterImg = container.querySelector('.after-img');
+
+            // Fungsi untuk update posisi slider berdasarkan koordinat X
+            function updateSlider(clientX) {
+                const rect = container.getBoundingClientRect();
+                let x = clientX - rect.left;
+                
+                // Jaga agar x tetap dalam batas container
+                if (x < 0) x = 0;
+                if (x > rect.width) x = rect.width;
+                
+                // Hitung persentase
+                const positionPercent = (x / rect.width) * 100;
+                
+                // Update posisi gagang
+                handle.style.left = `${positionPercent}%`;
+                
+                // Update clip-path gambar "After"
+                // polygon(x1 y1, x2 y2, x3 y3, x4 y4)
+                afterImg.style.clipPath = `polygon(${positionPercent}% 0, 100% 0, 100% 100%, ${positionPercent}% 100%)`;
+            }
+
+            // Event Listeners untuk Mouse
+            handle.addEventListener('mousedown', () => isResizing = true);
+            window.addEventListener('mouseup', () => isResizing = false);
+            container.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                updateSlider(e.clientX);
+            });
+
+            // Event Listeners untuk Touch (HP)
+            handle.addEventListener('touchstart', () => isResizing = true);
+            window.addEventListener('touchend', () => isResizing = false);
+            container.addEventListener('touchmove', (e) => {
+                if (!isResizing) return;
+                // Ambil koordinat sentuhan pertama
+                updateSlider(e.touches[0].clientX);
+            });
+
+            // Set posisi awal (tengah)
+            const rect = container.getBoundingClientRect();
+            updateSlider(rect.left + rect.width / 2);
         }
     </script>
 </body>
